@@ -1,7 +1,6 @@
 #ifndef GLOBALH
 #define GLOBALH
 
-#define _GNU_SOURCE
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>

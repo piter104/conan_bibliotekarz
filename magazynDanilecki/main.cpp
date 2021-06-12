@@ -37,7 +37,7 @@ void check_thread_support(int provided)
             /* Potrzebne zamki wokół wywołań biblioteki MPI */
             printf("tylko jeden watek naraz może wykonać wołania do biblioteki MPI\n");
 	    break;
-        case MPI_THREAD_MULTIPLE: printf("Pełne wsparcie dla wątków\n"); /* tego chcemy. Wszystkie inne powodują problemy */
+        case MPI_THREAD_MULTIPLE: printf("Pełne wsparcie dla wątkooooow\n"); /* tego chcemy. Wszystkie inne powodują problemy */
 	    break;
         default: printf("Nikt nic nie wie\n");
     }
@@ -99,7 +99,7 @@ void finalizuj()
 void sendPacket(packet_t *pkt, int destination, int tag)
 {
     int freepkt=0;
-    if (pkt==0) { pkt = malloc(sizeof(packet_t)); freepkt=1;}
+    if (pkt==0) { pkt = new packet_t; freepkt=1;}
     pkt->src = rank;
     MPI_Send( pkt, 1, MPI_PAKIET_T, destination, tag, MPI_COMM_WORLD);
     if (freepkt) free(pkt);

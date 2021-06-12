@@ -11,7 +11,7 @@ void mainLoop()
             if (stan==InRun) {
 		debug("Zmieniam stan na wysyłanie");
 		changeState( InSend );
-		packet_t *pkt = malloc(sizeof(packet_t));
+		packet_t *pkt = new packet_t;
 		pkt->data = perc;
                 changeTallow( -perc);
                 sleep( SEC_IN_STATE); // to nam zasymuluje, że wiadomość trochę leci w kanale

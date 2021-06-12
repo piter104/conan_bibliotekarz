@@ -1,0 +1,52 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "gcc build active file",
+            "command": "/usr/bin/g++ undefined reference to `operator delete(void*, unsigned long)",
+            "args": [
+                "-g",
+                "/home/piotrek/publiczny/xd/conan_bibliotekarz/magazynDanilecki/main.c",
+                "/home/piotrek/publiczny/xd/conan_bibliotekarz/magazynDanilecki/watek_komunikacyjny.c",
+                "/home/piotrek/publiczny/xd/conan_bibliotekarz/magazynDanilecki/monitor.c",
+                "/home/piotrek/publiczny/xd/conan_bibliotekarz/magazynDanilecki/watek_glowny.c",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}"
+            ],
+            "options": {
+                "cwd": "/usr/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "mpicc build active file",
+            "command": "/usr/bin/mpiCC",
+            "args": [
+                "/home/piotrek/publiczny/xd/conan_bibliotekarz/magazynDanilecki/watek_glowny.cpp",
+                "/home/piotrek/publiczny/xd/conan_bibliotekarz/magazynDanilecki/watek_komunikacyjny.cpp",
+                "/home/piotrek/publiczny/xd/conan_bibliotekarz/magazynDanilecki/main.cpp",
+                "/home/piotrek/publiczny/xd/conan_bibliotekarz/magazynDanilecki/monitor.cpp",
+                "-DDEBUG",
+                "-g",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}.out"
+            ],
+            "options": {
+                "cwd": "/usr/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+
+    ]
+}
