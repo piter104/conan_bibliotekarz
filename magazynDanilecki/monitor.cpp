@@ -11,7 +11,7 @@ void *startMonitor(void *ptr)
 {
     /* Obrazuje pętlę odbierającą komendy od użytkownika */
     char *instring, *token, *saveptr;
-    instring=malloc(100);
+    instring = new char[100];
     int newline;
     char *res;
     while ( stan!=InFinish ) {
@@ -63,12 +63,12 @@ void *startMonitor(void *ptr)
             }
             
             debug( "wysyłam typ %d do %d z danymi %d", type, i, data);
-	    packet_t *pkt = malloc(sizeof(packet_t));
+	    packet_t *pkt = new packet_t;
             pkt->data=data;
 	    sendPacket(pkt,i,type);
-            free(pkt);
+            delete pkt;
         } 
- //       free(instring);
+ //       delete(instring);
     }
-    free(instring);
+    delete instring;
 }
