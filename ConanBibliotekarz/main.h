@@ -26,9 +26,6 @@ extern state_t stan;
 extern int rank;
 extern int size;
 
-/* Ile mamy łoju na składzie? */
-extern int tallow;
-
 /* stan globalny wykryty przez monitor */
 extern int globalState;
 /* ilu już odpowiedziało na GIVEMESTATE */

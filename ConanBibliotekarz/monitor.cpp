@@ -8,6 +8,18 @@ pthread_mutex_t Monitor::lamportMutex;
 int Monitor::rank;
 int Monitor::size;
 
+packet_t Monitor::receiveMessage() {
+	packet_t packet;
+    	MPI_Status status;
+    	MPI_Recv( &packet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+	packet.src = status.MPI_TAG;
+	Monitor::incrementLamportOnReceive(packet);
+	return packet;
+}
+
+void Monitor::sendMessage(packet_t *packet, int target, int tag) {
+	MPI_Send(packet, 1, MPI_PAKIET_T, target, tag, MPI_COMM_WORLD);
+}
 
 void Monitor::incrementLamportOnSend() {
     pthread_mutex_lock(&Monitor::lamportMutex);
