@@ -14,6 +14,7 @@ void Librarian::loop(int size, int rank){
         debug("Wysłałem wiadomość o treści: %d do kolegi: %d", pkt->data, target);
         received = Monitor::receiveMessage();
         debug("Otrzymałem wiadomość o treści: %d od kolegi: %d", received.data, received.src);
+        debug("Jestę bibliotekarzę - %d", rank)
     }
 
 }
