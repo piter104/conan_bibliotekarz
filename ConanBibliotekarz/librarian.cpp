@@ -5,7 +5,7 @@ void Librarian::loop(int size, int rank){
 	
 	while(1){
 		sleep(10);
-        debug("Jestę bibliotekarzem - %d", rank)
+        debug("Jestę bibliotekarzę - %d", rank)
     }
 
 }
