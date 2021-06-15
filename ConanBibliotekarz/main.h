@@ -9,6 +9,10 @@
 #include <string.h>
 #include <pthread.h>
 #include <iostream>
+#include <queue>
+#include <map>
+#include <deque>
+#include <algorithm>
 
 using namespace std;
 /* odkomentować, jeżeli się chce DEBUGI */
@@ -37,14 +41,15 @@ extern int numberReceived;
 /* to może przeniesiemy do global... */
 typedef struct {
     int ts;       /* timestamp (zegar lamporta */
-    int src;      /* pole nie przesyłane, ale ustawiane w main_loop */
-
+    int src;      /* pole nie przesyłane, ale ustawiane w main_loop */ 
     int data;     /* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą */
+    int tag;
 } packet_t;
 extern MPI_Datatype MPI_PAKIET_T;
 
 /* Typy wiadomości */
-#define FINISH 1
+#define NEW_TASK 100 //tag nowe zlecenie
+
 #define TALLOWTRANSPORT 2
 #define INRUN 3
 #define INMONITOR 4

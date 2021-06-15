@@ -18,5 +18,6 @@ class Conan {
 		static ConanState state;
 };
 
+void *listenForNewTasks (void* x);
 
 #endif
