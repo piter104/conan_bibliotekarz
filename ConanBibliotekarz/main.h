@@ -48,7 +48,7 @@ typedef struct {
 extern MPI_Datatype MPI_PAKIET_T;
 
 /* Typy wiadomości */
-#define NEW_TASK 100 //tag nowe zlecenie
+#define ACK_DZ 100 //tag nowe zlecenie
 
 #define TALLOWTRANSPORT 2
 #define INRUN 3

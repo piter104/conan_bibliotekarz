@@ -1,5 +1,6 @@
 #include "main.h"
 #include "monitor.h"
+#include "conan.h"
 #include <algorithm>
 
 unsigned int Monitor::lamport = 0;
@@ -9,6 +10,10 @@ int Monitor::rank;
 int Monitor::size;
 
 bool Monitor::listening = false;
+
+queue<packet_t> Monitor::queueTasks;
+
+pthread_mutex_t Monitor::mutexQueueTasks = PTHREAD_MUTEX_INITIALIZER;
 
 packet_t Monitor::receiveMessage() {
 	packet_t packet;
@@ -49,10 +54,14 @@ void Monitor::listen(){
 	packet_t received;
 	while(Monitor::listening){
 		received = Monitor::receiveMessage();
-        debug("Conan: Otrzymałem wiadomość o treści: %d od kolegi: %d, typ wiadomości: %d", received.data, received.src, received.tag);
+        // debug("Conan: Otrzymałem wiadomość o treści: %d od kolegi: %d, typ wiadomości: %d", received.data, received.src, received.tag);
+		pthread_mutex_lock(&Monitor::mutexQueueTasks);
 		if (received.tag == 100) {
+			Conan::state = ConanState::TAKE_Z;
+			queueTasks.push(received);
 			debug("Conan: Otrzymałem zlecenie o numerze: %d od Bibliotekarza: %d", received.data, received.src);
 		}
+		pthread_mutex_unlock(&Monitor::mutexQueueTasks);
 		
 
 		// if(received.tag == I_GO){
