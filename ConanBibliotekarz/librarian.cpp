@@ -8,7 +8,7 @@ void Librarian::loop(int size, int rank){
     packet_t received;
 	while(1){
 		sleep(10);
-        int target = rand()%4;
+        int target = rand()%size;
         pkt->data = rand()%100;
         Monitor::sendMessage(pkt, target, 2);
         debug("Wysłałem wiadomość o treści: %d do kolegi: %d", pkt->data, target);

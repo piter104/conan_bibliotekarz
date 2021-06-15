@@ -43,7 +43,7 @@ void check_thread_support(int provided)
 void inicjuj(int *argc, char ***argv)
 {
     int provided;
-    MPI_Init_thread(argc, argv,MPI_THREAD_MULTIPLE, &provided);
+    MPI_Init_thread(argc, argv, MPI_THREAD_MULTIPLE, &provided);
     check_thread_support(provided);
 
 

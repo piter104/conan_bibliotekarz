@@ -8,6 +8,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
+#include <iostream>
+
+using namespace std;
 /* odkomentować, jeżeli się chce DEBUGI */
 //#define DEBUG 
 /* boolean */
