@@ -15,10 +15,12 @@ void Conan::loop(int size, int rank){
         while (1) {
                 if (Conan::state == ConanState::TAKE_Z){
                         for (int i=0; i< Monitor::queueTasks.size(); i++){
-                                debug("nowe zlecenie od bibliotekarza: %d, stan: TAKE_Z", Monitor::queueTasks.front().src);
+                                debug("%d", i);
+                                debug("nowe zlecenie od bibliotekarza: %d, stan: TAKE_Z", Monitor::queueTasks[i].src);
                         }
-                sleep(10);
+                Conan::state = ConanState::WAIT_Z; //dodane tylk po to, zeby wyszedl ze stanu TAKE_Z i nie printował nic 
                 }
+                sleep(10);
         }
 
         

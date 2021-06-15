@@ -11,7 +11,7 @@ int Monitor::size;
 
 bool Monitor::listening = false;
 
-queue<packet_t> Monitor::queueTasks;
+deque<packet_t> Monitor::queueTasks;
 
 pthread_mutex_t Monitor::mutexQueueTasks = PTHREAD_MUTEX_INITIALIZER;
 
@@ -58,7 +58,7 @@ void Monitor::listen(){
 		pthread_mutex_lock(&Monitor::mutexQueueTasks);
 		if (received.tag == 100) {
 			Conan::state = ConanState::TAKE_Z;
-			queueTasks.push(received);
+			queueTasks.push_back(received);
 			debug("Conan: Otrzymałem zlecenie o numerze: %d od Bibliotekarza: %d", received.data, received.src);
 		}
 		pthread_mutex_unlock(&Monitor::mutexQueueTasks);

@@ -9,7 +9,7 @@ class Monitor {
 		static pthread_mutex_t lamportMutex;
         static int rank;
         static int size;
-		static queue<packet_t> queueTasks;
+		static deque<packet_t> queueTasks;
 
 		static pthread_mutex_t mutexQueueTasks;
 
