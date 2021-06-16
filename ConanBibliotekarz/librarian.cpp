@@ -12,12 +12,12 @@ void Librarian::loop(int size, int rank){
         if (state == LibrarianState::WAIT_NC){
 		    sleep(rand()%10); //bibliotekarz czeka losową ilość czasu na nowe zlecenie
             debug("Bibliotekarz: Pojawiło się nowe zlecenie!");
-            int numberOfConans = 3;
+
             int conans = 0;
-            int chosenConans[3];
+            int chosenConans[Monitor::CONANTASKNUMBER];
             int target;
             int taskNumber = rand()%100;
-            while (conans < numberOfConans) {
+            while (conans < Monitor::CONANTASKNUMBER) {
                 target = rand()%size;
                 if (target%4) {
                     bool alreadySended = false;
@@ -30,12 +30,17 @@ void Librarian::loop(int size, int rank){
                     if (!alreadySended){
                         chosenConans[conans] = target;
                         conans++;
-                        pkt->data = taskNumber;
-                        pkt->tag = 100;
-                        Monitor::sendMessage(pkt, target, 2);
-                        debug("Bibliotekarz: Wysłałem zlecenie o numerze: %d do Conana: %d", pkt->data, target);
                     }
                 }
+            }
+            for (int i = 0; i < conans; i++){
+                pkt->cc[i] = chosenConans[i];
+            }
+            for (int i = 0; i < conans; i++){
+                pkt->data = taskNumber;
+                pkt->tag = ACK_DZ;
+                Monitor::sendMessage(pkt, chosenConans[i], 2);
+                debug("Bibliotekarz: Wysłałem zlecenie o numerze: %d do Conana: %d", pkt->data, chosenConans[i]);
             }
         state = LibrarianState::WAIT_PZ;
         } else {

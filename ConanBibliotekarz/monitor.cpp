@@ -4,10 +4,14 @@
 #include <algorithm>
 
 unsigned int Monitor::lamport = 0;
-pthread_mutex_t Monitor::lamportMutex; 
+unsigned int Monitor::takeTaskLamport = 0;
+pthread_mutex_t Monitor::lamportMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t Monitor::takeTaskMutex = PTHREAD_MUTEX_INITIALIZER; 
+
 
 int Monitor::rank;
 int Monitor::size;
+int Monitor::reply_counter = 0;
 
 bool Monitor::listening = false;
 
@@ -20,11 +24,12 @@ packet_t Monitor::receiveMessage() {
     MPI_Status status;
     MPI_Recv( &packet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 	packet.src = status.MPI_SOURCE;
-	Monitor::incrementLamportOnReceive(packet);
+	//Monitor::incrementLamportOnReceive(packet);
 	return packet;
 }
 
 void Monitor::sendMessage(packet_t *packet, int target, int tag) {
+	Monitor::incrementLamportOnSend();
 	MPI_Send(packet, 1, MPI_PAKIET_T, target, tag, MPI_COMM_WORLD);
 }
 
@@ -37,7 +42,7 @@ void Monitor::incrementLamportOnSend() {
 void Monitor::incrementLamportOnReceive(packet_t packet) {    
 	pthread_mutex_lock(&Monitor::lamportMutex);
    	Monitor::lamport = std::max((unsigned) packet.ts, Monitor::lamport) + 1;
-    	pthread_mutex_unlock(&Monitor::lamportMutex);
+    pthread_mutex_unlock(&Monitor::lamportMutex);
 }
 
 unsigned int Monitor::getLamport() {
@@ -50,63 +55,83 @@ void Monitor::initMonitor(){
 }
 
 void Monitor::listen(){
+	int repliers[Monitor::CONANTASKNUMBER - 1];
 	Monitor::listening = true;
 	packet_t received;
+	packet_t *pkt = new packet_t;
 	while(Monitor::listening){
 		received = Monitor::receiveMessage();
-        // debug("Conan: Otrzymałem wiadomość o treści: %d od kolegi: %d, typ wiadomości: %d", received.data, received.src, received.tag);
-		pthread_mutex_lock(&Monitor::mutexQueueTasks);
 		if (received.tag == 100) {
 			Conan::state = ConanState::TAKE_Z;
+			pthread_mutex_lock(&Monitor::mutexQueueTasks);
 			queueTasks.push_back(received);
+			pthread_mutex_unlock(&Monitor::mutexQueueTasks);
 			debug("Conan: Otrzymałem zlecenie o numerze: %d od Bibliotekarza: %d", received.data, received.src);
 		}
-		pthread_mutex_unlock(&Monitor::mutexQueueTasks);
-		
+		else if (received.tag == 110) {
+			pkt->tag = ACK_PZ;
+			pkt->src = Monitor::rank;
+			pthread_mutex_lock(&Monitor::takeTaskMutex);
+			debug("Conan: moj: %d jego: %d", Monitor::takeTaskLamport, received.ts);
+			if(Monitor::takeTaskLamport > received.ts || (Monitor::takeTaskLamport == received.ts && Monitor::rank > received.src)){
+				pkt->data = received.data;
+				debug("Conan: Udzielam zgodę na przyjęcie zlecenia: %d przez Conana: %d", received.data, received.src);
+				Monitor::sendMessage(pkt, received.src, 2);
+			}
+			else {
+				pkt->data = false;
+				debug("Conan: Odmawiam zgody na przyjęcie zlecenia: %d przez Conana: %d", received.data, received.src);
+				Monitor::sendMessage(pkt, received.src, 2);
+			}
+			pthread_mutex_unlock(&Monitor::takeTaskMutex);
+		}
+		else if (received.tag == 120) {
+			if(received.data){
+				bool is_taken = true;
+				//sprawdzamy czy ktoś już nie zabrał zlecenia
+				for (auto i = Monitor::queueTasks.begin(); i != Monitor::queueTasks.end();) {
+					if (i._M_cur->data == received.data){
+						is_taken = false;
+						break;
+					}
+					else
+						++i;
+					}
+				if(!is_taken){
+					repliers[reply_counter] = received.src;
+					if(++reply_counter == Monitor::CONANTASKNUMBER - 1){
+						pkt->tag = ACK_Z;
+						pkt->src = Monitor::rank;
+						pkt->data = received.data;
+						debug("Dostałem wszystkie zgody na zlecenie");
+						Conan::state = ConanState::GET_S; 
+						for(int i = 0; i < Monitor::CONANTASKNUMBER - 1; i++)
+							Monitor::sendMessage(pkt, repliers[i], 2);
+						reply_counter = 0;
+					}
+				}
+			}
+			else {
+				reply_counter = 0;
+				Conan::state = ConanState::TAKE_Z; 
+			}
+		}
+		else if (received.tag == 130) {
+			debug("Conan: Otrzymałem informację o przyjęciu zlecenia: %d  przez Conana: %d", received.data , received.src);
+			pthread_mutex_lock(&Monitor::mutexQueueTasks);
+			for (auto i = Monitor::queueTasks.begin(); i != Monitor::queueTasks.end();) {
+				if (i._M_cur->data == received.data){
+					Monitor::queueTasks.erase(i);
+					break;
+				}
+				else
+					++i;
+				}
+			pthread_mutex_unlock(&Monitor::mutexQueueTasks);
+			reply_counter = 0;
+			Conan::state = ConanState::TAKE_Z; 
+		}
 
-		// if(received.tag == I_GO){
-		// 	if(!Monitor::inOnMission(packet.from))
-        //                 	Monitor::onMission.push_back(packet.from);
-        //         } else if(packet.tag == MISSION_FINISHED){
-        //         	Monitor::onMission.erase(std::remove(Monitor::onMission.begin(), Monitor::onMission.end(), packet.from), Monitor::onMission.end());
-        //         } else if (Hunters::listenPrincipal) {
-		// 	pthread_mutex_lock(&Monitor::messageQMutex);
-		// 	Monitor::messageQ.push(packet);
-		// 	pthread_mutex_unlock(&Monitor::messageQMutex);
-		// }
-
-	// 	if(packet.tag == SHOP_REQ && Hunters::state != HuntersState::ON_MISSION){
-	// 		int target = packet.from;
-	// 		Monitor::shop_q.push_back(std::make_pair(packet.lamport,target));
-    //                     packet.from = Monitor::rank;
-    //                     packet.lamport = Monitor::getMyLamportShopQueue();
-	// 		if(Hunters::state == HuntersState::WAITING_SHOP){
-	// 			Monitor::sendMessage(&packet,target,TRUE);
-	// 		} else {
-	// 			Monitor::sendMessage(&packet,target,FALSE);
-	// 		}
-	// 	} else if(packet.tag == TRUE){
-    //             	Monitor::ackShop++;
-	// 		Monitor::shop_q.push_back(std::make_pair(packet.lamport,packet.from));
-    //     	} else if(packet.tag == FALSE){
-    //             	Monitor::ackShop++;
-    //     	} else if(packet.tag == OUT){
-	// 		//std::cout << YELLOW << Monitor::rank << "::" << packet.from << RESET << std::endl;
-    //                     Monitor::ackShop++;
-	// 		Monitor::inShop.erase(std::remove(Monitor::inShop.begin(), Monitor::inShop.end(), packet.from), Monitor::inShop.end());
-    //             } else if(packet.tag == IN){
-	// 		if(Monitor::shop_q.size()>0)
-    //                             Monitor::shop_q.erase(Monitor::shop_q.begin());
-    //             	Monitor::inShop.push_back(packet.from);
-	// 	} else if(packet.tag == I_GO){
-	// 		if(!Monitor::inOnMission(packet.from))
-    //                     	Monitor::onMission.push_back(packet.from);
-    //             } else if(packet.tag == MISSION_FINISHED){
-    //             	Monitor::onMission.erase(std::remove(Monitor::onMission.begin(), Monitor::onMission.end(), packet.from), Monitor::onMission.end());
-    //             } else if (Hunters::listenPrincipal) {
-	// 		pthread_mutex_lock(&Monitor::messageQMutex);
-	// 		Monitor::messageQ.push(packet);
-	// 		pthread_mutex_unlock(&Monitor::messageQMutex);
-	// 	}
+	
 	}	
 }

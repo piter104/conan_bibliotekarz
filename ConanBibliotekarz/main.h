@@ -15,65 +15,30 @@
 #include <algorithm>
 
 using namespace std;
-/* odkomentować, jeżeli się chce DEBUGI */
-//#define DEBUG 
+
 /* boolean */
 #define TRUE 1
 #define FALSE 0
 
-/* używane w wątku głównym, determinuje jak często i na jak długo zmieniają się stany */
-#define STATE_CHANGE_PROB 50
-#define SEC_IN_STATE 2
-
-#define ROOT 0
-
-/* stany procesu */
-typedef enum {InRun, InMonitor, InSend, InFinish} state_t;
-extern state_t stan;
 extern int rank;
 extern int size;
 
-/* stan globalny wykryty przez monitor */
-extern int globalState;
-/* ilu już odpowiedziało na GIVEMESTATE */
-extern int numberReceived;
-
-/* to może przeniesiemy do global... */
 typedef struct {
-    int ts;       /* timestamp (zegar lamporta */
+    unsigned int ts;       /* timestamp (zegar lamporta */
     int src;      /* pole nie przesyłane, ale ustawiane w main_loop */ 
     int data;     /* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą */
     int tag;
+    int cc[3];
 } packet_t;
 extern MPI_Datatype MPI_PAKIET_T;
 
 /* Typy wiadomości */
 #define ACK_DZ 100 //tag nowe zlecenie
+#define REQ_PZ 110 //tag request o zlecenie
+#define ACK_PZ 120 //tag zgoda lub odmowa
+#define ACK_Z 130 //tag info że zajal zlecenie
 
-#define TALLOWTRANSPORT 2
-#define INRUN 3
-#define INMONITOR 4
-#define GIVEMESTATE 5
-#define STATE 6
 
-/* macro debug - działa jak printf, kiedy zdefiniowano
-   DEBUG, kiedy DEBUG niezdefiniowane działa jak instrukcja pusta 
-   
-   używa się dokładnie jak printfa, tyle, że dodaje kolorków i automatycznie
-   wyświetla rank
-
-   w związku z tym, zmienna "rank" musi istnieć.
-
-   w printfie: definicja znaku specjalnego "%c[%d;%dm [%d]" escape[styl bold/normal;kolor [RANK]
-                                           FORMAT:argumenty doklejone z wywołania debug poprzez __VA_ARGS__
-					   "%c[%d;%dm"       wyczyszczenie atrybutów    27,0,37
-                                            UWAGA:
-                                                27 == kod ascii escape. 
-                                                Pierwsze %c[%d;%dm ( np 27[1;10m ) definiuje styl i kolor literek
-                                                Drugie   %c[%d;%dm czyli 27[0;37m przywraca domyślne kolory i brak pogrubienia (bolda)
-                                                ...  w definicji makra oznacza, że ma zmienną liczbę parametrów
-                                            
-*/
 #ifdef DEBUG
 #define debug(FORMAT,...) printf("%c[%d;%dm [%d]: " FORMAT "%c[%d;%dm\n",  27, (1+(rank/7))%2, 31+(6+rank)%7, rank, ##__VA_ARGS__, 27,0,37);
 #else
@@ -92,7 +57,4 @@ extern MPI_Datatype MPI_PAKIET_T;
 
 /* printf ale z kolorkami i automatycznym wyświetlaniem RANK. Patrz debug wyżej po szczegóły, jak działa ustawianie kolorków */
 #define println(FORMAT, ...) printf("%c[%d;%dm [%d]: " FORMAT "%c[%d;%dm\n",  27, (1+(rank/7))%2, 31+(6+rank)%7, rank, ##__VA_ARGS__, 27,0,37);
-
-/* wysyłanie pakietu, skrót: wskaźnik do pakietu (0 oznacza stwórz pusty pakiet), do kogo, z jakim typem */
-void sendPacket(packet_t *pkt, int destination, int tag);
 #endif
