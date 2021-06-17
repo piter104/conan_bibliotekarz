@@ -4,7 +4,7 @@
 LibrarianState Librarian::state = LibrarianState::WAIT_NC; //Bibliotekarz czeka na niesfornego czytelnika
 
 void Librarian::loop(int size, int rank){
-    debug("Jestę bibliotekarzę - %d", rank)
+    debug("Jestę bibliotekarzę - %d, stan: WAIT_NC", rank)
 	packet_t *pkt = new packet_t;
     pkt->src = Monitor::rank;
     packet_t received;
@@ -29,17 +29,17 @@ void Librarian::loop(int size, int rank){
                     }
                     if (!alreadySended){
                         chosenConans[conans] = target;
+                        pkt->cc[conans] = chosenConans[conans];
                         conans++;
                     }
                 }
             }
             for (int i = 0; i < conans; i++){
-                pkt->cc[i] = chosenConans[i];
-            }
-            for (int i = 0; i < conans; i++){
                 pkt->data = taskNumber;
                 pkt->tag = ACK_DZ;
-                Monitor::sendMessage(pkt, chosenConans[i], 2);
+                pkt->ts = Monitor::lamport;
+                Monitor::sendMessage(pkt, chosenConans[i], ACK_DZ);
+
                 debug("Bibliotekarz: Wysłałem zlecenie o numerze: %d do Conana: %d", pkt->data, chosenConans[i]);
             }
         state = LibrarianState::WAIT_PZ;

@@ -14,7 +14,6 @@ void Conan::loop(int size, int rank){
         packet_t *pkt = new packet_t;
         pkt->src = Monitor::rank;
         int counter = 0;
-
         while (1) {
                 if (Conan::state == ConanState::TAKE_Z){
                         for (int i=0; i< Monitor::queueTasks.size(); i++){
@@ -23,17 +22,16 @@ void Conan::loop(int size, int rank){
                                         if(Monitor::queueTasks[i].cc[j] == Monitor::rank){
                                                 continue;
                                         }
-                                        Monitor::takeTaskLamport = Monitor::getLamport();
                                         pkt->data = Monitor::queueTasks[i].data;
                                         pkt->tag = REQ_PZ;
-                                        pthread_mutex_lock(&Monitor::takeTaskMutex);
-                                        pkt->ts = Monitor::takeTaskLamport;
-                                        pthread_mutex_unlock(&Monitor::takeTaskMutex);
-                                        Monitor::sendMessage(pkt, Monitor::queueTasks[i].cc[j], 2);
+                                        pthread_mutex_lock(&Monitor::lamportMutex);
+                                        pkt->ts = Monitor::lamport;
+                                        pthread_mutex_unlock(&Monitor::lamportMutex);
+                                        Monitor::sendMessage(pkt, Monitor::queueTasks[i].cc[j], REQ_PZ);
                                         Conan::state = ConanState::WAIT_Z; 
-                                        debug("Conan: Wysłałem ACK_Z na zleceni o numerze: %d do Conana: %d", pkt->data, Monitor::queueTasks[i].cc[j]);
+                                        debug("Conan: Wysłałem ACK_Z na zlecenie o numerze: %d do Conana: %d", pkt->data, Monitor::queueTasks[i].cc[j]);
                                 }
-                                // czeka na odpowiedzi
+                                //czeka na odpowiedzi
                                 while(Conan::state == ConanState::WAIT_Z){
                                 }
                         }

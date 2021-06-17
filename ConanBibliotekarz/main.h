@@ -27,8 +27,8 @@ typedef struct {
     unsigned int ts;       /* timestamp (zegar lamporta */
     int src;      /* pole nie przesyłane, ale ustawiane w main_loop */ 
     int data;     /* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą */
-    int tag;
-    int cc[3];
+    int tag;      // typ wiadomości
+    int cc[3];      
 } packet_t;
 extern MPI_Datatype MPI_PAKIET_T;
 
