@@ -9,16 +9,20 @@ private:
 public:
 	const static int CONANTASKNUMBER = 3;
 	const static int SUITS = 3;
+	const static int NUMBER_OF_CONANS = 6;
 	static unsigned int lamport;
 	static pthread_mutex_t takeTaskMutex;
 	static pthread_mutex_t lamportMutex;
 	static int rank;
 	static int size;
 	static int reply_counter;
+	static int reply_counter_suits;
+	static int taken_suits;
 	static int my_suits_counter;
 	static int my_task;
+	static int reply_wants_s;
 	static deque<packet_t> queueTasks;
-	static deque<int> queueForSuits;
+	static deque<packet_t> queueForSuits;
 
 	static pthread_mutex_t mutexQueueTasks;
 
@@ -29,5 +33,6 @@ public:
 	static void initMonitor();
 	static void deleteTaskFromQueue(int data);
 	static void listen();
+	static bool prioritySortCriterion(packet_t conan1, packet_t conan2);
 };
 #endif

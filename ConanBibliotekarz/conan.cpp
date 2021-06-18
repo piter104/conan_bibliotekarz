@@ -21,7 +21,7 @@ void Conan::loop(int size, int rank)
                 {
                         for (int i = 0; i < Monitor::queueTasks.size(); i++)
                         {
-                                debug("nowe zlecenie od bibliotekarza: %d, stan: TAKE_Z", Monitor::queueTasks[i].src);
+                                // debug("nowe zlecenie od bibliotekarza: %d, stan: TAKE_Z", Monitor::queueTasks[i].src);
                                 for (int j = 0; j < Monitor::CONANTASKNUMBER; j++)
                                 {
                                         if (Monitor::queueTasks[i].cc[j] == Monitor::rank)
@@ -35,7 +35,7 @@ void Conan::loop(int size, int rank)
                                         pthread_mutex_unlock(&Monitor::lamportMutex);
                                         Monitor::sendMessage(pkt, Monitor::queueTasks[i].cc[j], REQ_PZ);
                                         Conan::state = ConanState::WAIT_Z;
-                                        debug("Conan: Wysłałem ACK_Z na zlecenie o numerze: %d do Conana: %d", pkt->data, Monitor::queueTasks[i].cc[j]);
+                                        debug("Conan: Wysłałem REQ_PZ o zlecenie o numerze: %d do Conana: %d", pkt->data, Monitor::queueTasks[i].cc[j]);
                                 }
                                 //czeka na odpowiedzi
                                 while (Conan::state == ConanState::WAIT_Z)
@@ -56,6 +56,7 @@ void Conan::loop(int size, int rank)
                                 if (i == rank || !(i % 4))
                                         continue;
                                 Monitor::sendMessage(pkt, i, REQ_S);
+                                Monitor::queueForSuits.push_back(*pkt);
                         }
                         Conan::state = ConanState::WAIT_S;
                         debug("Conan: Wysłałem REQ_S do wszystkich Conanów");
