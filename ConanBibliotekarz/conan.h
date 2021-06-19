@@ -9,7 +9,8 @@ WAIT_S, //oczekiwanie na wolny strój
 GET_S, //wypożyczenie stroju
 COMPLETE_Z, //wykonanie zlecenia
 REPORT_Z, //oddanie zlecenia
-WAIT_P //oczekiwanie na wejście do pralni
+WAIT_P, //oczekiwanie na wejście do pralni
+RETURN_S //zwrot stroju do magazynu
 };
 
 class Conan {

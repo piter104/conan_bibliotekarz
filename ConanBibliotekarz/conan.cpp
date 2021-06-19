@@ -21,7 +21,6 @@ void Conan::loop(int size, int rank)
                 {
                         for (int i = 0; i < Monitor::queueTasks.size(); i++)
                         {
-                                // debug("nowe zlecenie od bibliotekarza: %d, stan: TAKE_Z", Monitor::queueTasks[i].src);
                                 for (int j = 0; j < Monitor::CONANTASKNUMBER; j++)
                                 {
                                         if (Monitor::queueTasks[i].cc[j] == Monitor::rank)
@@ -35,11 +34,12 @@ void Conan::loop(int size, int rank)
                                         pthread_mutex_unlock(&Monitor::lamportMutex);
                                         Monitor::sendMessage(pkt, Monitor::queueTasks[i].cc[j], REQ_PZ);
                                         Conan::state = ConanState::WAIT_Z;
-                                        debug("Conan: Wysłałem REQ_PZ o zlecenie o numerze: %d do Conana: %d", pkt->data, Monitor::queueTasks[i].cc[j]);
+                                      // debug("Conan: Wysłałem REQ_PZ o zlecenie o numerze: %d do Conana: %d", pkt->data, Monitor::queueTasks[i].cc[j]);
                                 }
                                 //czeka na odpowiedzi
                                 while (Conan::state == ConanState::WAIT_Z)
                                 {
+                                        Monitor::my_librarian = Monitor::queueTasks[i].src;
                                 }
                                 if (Conan::state == ConanState::GET_S)
                                         break;
@@ -66,11 +66,34 @@ void Conan::loop(int size, int rank)
                 }
                 if (Conan::state == ConanState::COMPLETE_Z)
                 {
-                        while (1)
+                        debug("Wykonuję zlecenie!");
+                        sleep(rand() % 10 + 10);
+                        debug("Wykonałem zlecenie!");
+                        Conan::state = ConanState::REPORT_Z;
+                }
+                if (Conan::state == ConanState::REPORT_Z)
+                {
+                        pkt->data = true;
+                        pkt->tag = ACK_WZ;
+                        Monitor::sendMessage(pkt, Monitor::my_librarian, ACK_WZ);
+                        Conan::state = ConanState::RETURN_S;
+                        debug("Conan: Jestem w pralni której nie zaimplementowaliście!!!");
+                        sleep(5);
+                }
+                if (Conan::state == ConanState::RETURN_S)
+                {
+                        if (Monitor::queueTasks.size() == 0)
+                                Conan::state = ConanState::WAIT_Z;
+                        else
+                                Conan::state = ConanState::TAKE_Z;
+                        pkt->tag = RELEASE_S;
+                        for (int i = 0; i < size; i++)
                         {
-                                sleep(10);
-                                debug("Zaimplementujcie wykonanywanie zlecenia!!!");
+                                if (i == rank || !(i % 4))
+                                        continue;
+                                Monitor::sendMessage(pkt, i, RELEASE_S);
                         }
+                        debug("Conan: Oddałem strój ziomeczki!");
                 }
         }
         sleep(5);

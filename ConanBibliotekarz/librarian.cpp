@@ -58,9 +58,16 @@ void Librarian::loop(int size, int rank)
         else
         {
             debug("Bibliotekarz: Dalej Conanie! Czekam az skończysz misje. Jestem w stanie WAIT_WZ");
-            sleep(100);
+            while (1)
+            {
+                received = Monitor::receiveMessage();
+                if (received.tag == ACK_WZ)
+                {
+                    debug("Bibliotekarz: Dzięki Conanie! Dobrze się spisałeś. Lecę ogarniać kolejnych niesfornych czytelników.");
+                    Librarian::state = LibrarianState::WAIT_NC;
+                    break;
+                }
+            }
         }
-        // received = Monitor::receiveMessage();
-        // debug("Bibliotekarz: Otrzymałem wiadomość o treści: %d od Conana: %d", received.data, received.src);
     }
 }
