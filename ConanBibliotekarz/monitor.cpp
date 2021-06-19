@@ -23,9 +23,9 @@ deque<packet_t> Monitor::queueTasks;
 deque<packet_t> Monitor::queueForSuits;
 pthread_mutex_t Monitor::mutexQueueTasks = PTHREAD_MUTEX_INITIALIZER;
 
-bool Monitor::prioritySortCriterion (packet_t conan1,  packet_t conan2)
+bool Monitor::prioritySortCriterion(packet_t conan1, packet_t conan2)
 {
-    return conan1.ts<conan2.ts;
+	return conan1.ts < conan2.ts;
 }
 
 packet_t Monitor::receiveMessage()
@@ -146,19 +146,31 @@ void Monitor::listen()
 				}
 				if (!is_taken)
 				{
-					repliers[reply_counter] = received.src;
-					if (++reply_counter == Monitor::CONANTASKNUMBER - 1)
+					bool is_in = false;
+					for (int z = 0; z < reply_counter; z++)
 					{
-						my_task = received.data;
-						pkt->tag = ACK_Z;
-						pkt->src = Monitor::rank;
-						pkt->data = received.data;
-						debug("Conan: Dostałem wszystkie zgody na zlecenie: %d", my_task);
-						debug("Conan: Jestem w stanie GET_S");
-						Conan::state = ConanState::GET_S;
-						for (int i = 0; i < Monitor::CONANTASKNUMBER - 1; i++)
-							Monitor::sendMessage(pkt, repliers[i], ACK_Z);
-						reply_counter = 0;
+						if (repliers[z] == received.src)
+						{
+							is_in = true;
+						}
+					}
+					if (!is_in && my_task == -1)
+					{
+						repliers[reply_counter] = received.src;
+
+						if (++reply_counter == Monitor::CONANTASKNUMBER - 1)
+						{
+							my_task = received.data;
+							pkt->tag = ACK_Z;
+							pkt->src = Monitor::rank;
+							pkt->data = received.data;
+							debug("Conan: Dostałem wszystkie zgody na zlecenie: %d", my_task);
+							debug("Conan: Jestem w stanie GET_S");
+							Conan::state = ConanState::GET_S;
+							for (int i = 0; i < Monitor::CONANTASKNUMBER - 1; i++)
+								Monitor::sendMessage(pkt, repliers[i], ACK_Z);
+							reply_counter = 0;
+						}
 					}
 				}
 			}
@@ -202,22 +214,31 @@ void Monitor::listen()
 		{
 			debug("Conan: Dostałem odpowiedź na temat stroju od: %d", received.src);
 			reply_counter_suits++;
-			if (received.cc[0] == 0){
+			if (received.cc[0] == 0)
+			{
 				reply_wants_s++;
-				if (Monitor::queueForSuits.empty()){
+				if (Monitor::queueForSuits.empty())
+				{
 					Monitor::queueForSuits.push_back(received);
-				} else {
+				}
+				else
+				{
 					Monitor::queueForSuits.push_back(received);
 					sort(Monitor::queueForSuits.begin(), Monitor::queueForSuits.end(),
-					prioritySortCriterion);
+						 prioritySortCriterion);
 				}
 			}
-			if (Monitor::reply_counter_suits == Monitor::NUMBER_OF_CONANS - 1) {
+			if (Monitor::reply_counter_suits == Monitor::NUMBER_OF_CONANS - 1)
+			{
 				reply_counter_suits = 0;
-				if (Monitor::taken_suits == Monitor::SUITS ) {
+				if (Monitor::taken_suits == Monitor::SUITS)
+				{
 					Conan::state = ConanState::WAIT_S;
-				} else {
-					if (Monitor::queueForSuits.front().src == rank){
+				}
+				else
+				{
+					if (Monitor::queueForSuits.front().src == rank)
+					{
 						Conan::state = ConanState::COMPLETE_Z;
 					}
 				}
@@ -225,5 +246,3 @@ void Monitor::listen()
 		}
 	}
 }
-
-
