@@ -8,7 +8,7 @@ private:
 
 public:
 	const static int CONANTASKNUMBER = 3;
-	const static int SUITS = 1;
+	const static int SUITS = 3;
 	const static int NUMBER_OF_CONANS = 6;
 	static unsigned int lamport;
 	static pthread_mutex_t takeTaskMutex;

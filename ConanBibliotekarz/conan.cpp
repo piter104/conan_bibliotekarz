@@ -72,8 +72,8 @@ void Conan::loop(int size, int rank)
                 }
                 if (Conan::state == ConanState::COMPLETE_Z)
                 {
-                        Monitor::deleteTaskFromQueue(Monitor::my_task);
                         debug("Wykonuję zlecenie!");
+                        Monitor::deleteTaskFromQueue(Monitor::my_task);
                         sleep(rand() % 10 + 10);
                         debug("Wykonałem zlecenie!");
                         Conan::state = ConanState::REPORT_Z;

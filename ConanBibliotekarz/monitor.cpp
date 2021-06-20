@@ -68,34 +68,34 @@ void Monitor::initMonitor()
 
 void Monitor::deleteTaskFromQueue(int data)
 {
-	pthread_mutex_lock(&Monitor::mutexQueueTasks);
 	for (auto i = Monitor::queueTasks.begin(); i != Monitor::queueTasks.end();)
 	{
 		if (i._M_cur->data == data)
 		{
+			pthread_mutex_lock(&Monitor::mutexQueueTasks);
 			Monitor::queueTasks.erase(i);
+			pthread_mutex_unlock(&Monitor::mutexQueueTasks);
 			break;
 		}
 		else
 			++i;
 	}
-	pthread_mutex_unlock(&Monitor::mutexQueueTasks);
 }
 
 void Monitor::deleteConanFromQueue(int data)
 {
-	pthread_mutex_lock(&Monitor::mutexQueueSuits);
 	for (auto i = Monitor::queueForSuits.begin(); i != Monitor::queueForSuits.end();)
 	{
 		if (i._M_cur->src == data)
 		{
+			pthread_mutex_lock(&Monitor::mutexQueueSuits);
 			Monitor::queueTasks.erase(i);
+			pthread_mutex_unlock(&Monitor::mutexQueueSuits);
 			break;
 		}
 		else
 			++i;
 	}
-	pthread_mutex_unlock(&Monitor::mutexQueueSuits);
 }
 
 void Monitor::listen()
@@ -200,10 +200,19 @@ void Monitor::listen()
 		else if (received.tag == ACK_Z)
 		{
 			debug("Conan: Otrzymałem informację o przyjęciu zlecenia: %d  przez Conana: %d", received.data, received.src);
-			Monitor::deleteTaskFromQueue(received.data);
-			reply_counter = 0;
-			if (Conan::state == ConanState::WAIT_Z)
+			if (Monitor::my_task == received.data)
+			{
+				debug("Conan: MAMY KONFLIKT PANOWIE");
 				Conan::state = ConanState::TAKE_Z;
+				my_task = -1;
+			}
+			else
+			{
+				Monitor::deleteTaskFromQueue(received.data);
+				reply_counter = 0;
+				if (Conan::state == ConanState::WAIT_Z)
+					Conan::state = ConanState::TAKE_Z;
+			}
 		}
 		else if (received.tag == REQ_S)
 		{
