@@ -34,14 +34,14 @@ typedef struct
 extern MPI_Datatype MPI_PAKIET_T;
 
 /* Typy wiadomości */
-#define ACK_DZ 100 //tag nowe zlecenie
-#define REQ_PZ 110 //tag request o zlecenie
-#define ACK_PZ 120 //tag zgoda lub odmowa
-#define ACK_Z 130  //tag info że zajal zlecenie
-#define REQ_S 140  //tag prośba o strój
-#define ACK_S 150  //tag info czy pozwalam na strój
-#define ACK_TS 160 //tag info że wziąłem strój
-#define ACK_WZ 170 //tag info że skończyłem zlecenie
+#define ACK_DZ 100    //tag nowe zlecenie
+#define REQ_PZ 110    //tag request o zlecenie
+#define ACK_PZ 120    //tag zgoda lub odmowa
+#define ACK_Z 130     //tag info że zajal zlecenie
+#define REQ_S 140     //tag prośba o strój
+#define ACK_S 150     //tag info czy pozwalam na strój
+#define ACK_TS 160    //tag info że wziąłem strój
+#define ACK_WZ 170    //tag info że skończyłem zlecenie
 #define RELEASE_S 180 //tag info że oddałem strój
 
 #ifdef DEBUG

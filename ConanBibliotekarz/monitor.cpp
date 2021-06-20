@@ -119,7 +119,7 @@ void Monitor::listen()
 			pthread_mutex_lock(&Monitor::mutexQueueTasks);
 			queueTasks.push_back(received);
 			pthread_mutex_unlock(&Monitor::mutexQueueTasks);
-			//	debug("Conan: Otrzymałem zlecenie o numerze: %d od Bibliotekarza: %d", received.data, received.src);
+			//debug("Conan: Otrzymałem zlecenie o numerze: %d od Bibliotekarza: %d", received.data, received.src);
 		}
 		else if (received.tag == REQ_PZ)
 		{
@@ -246,14 +246,15 @@ void Monitor::listen()
 		else if (received.tag == ACK_S)
 		{
 			reply_counter_suits++;
-			Monitor::taken_suits += received.data;
+			//Monitor::taken_suits += received.data;
 			if (received.cc[0] == 0)
-		 	{
-				pthread_mutex_lock(&Monitor::mutexQueueSuits);
+			{
 				reply_wants_s++;
 				if (Monitor::queueForSuits.empty())
 				{
+					pthread_mutex_lock(&Monitor::mutexQueueSuits);
 					Monitor::queueForSuits.push_back(received);
+					pthread_mutex_unlock(&Monitor::mutexQueueSuits);
 				}
 				else
 				{
@@ -271,12 +272,13 @@ void Monitor::listen()
 					}
 					if (is_in)
 					{
+						pthread_mutex_lock(&Monitor::mutexQueueSuits);
 						Monitor::queueForSuits.push_back(received);
 						sort(Monitor::queueForSuits.begin(), Monitor::queueForSuits.end(),
 							 prioritySortCriterion);
+						pthread_mutex_unlock(&Monitor::mutexQueueSuits);
 					}
 				}
-				pthread_mutex_unlock(&Monitor::mutexQueueSuits);
 			}
 			if (Monitor::reply_counter_suits == Monitor::NUMBER_OF_CONANS - 1)
 			{
@@ -309,6 +311,7 @@ void Monitor::listen()
 		}
 		else if (received.tag == ACK_TS)
 		{
+			taken_suits++;
 			Monitor::deleteConanFromQueue(received.src);
 			sort(Monitor::queueForSuits.begin(), Monitor::queueForSuits.end(),
 				 prioritySortCriterion);
