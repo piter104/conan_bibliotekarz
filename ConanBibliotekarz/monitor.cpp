@@ -248,7 +248,7 @@ void Monitor::listen()
 			reply_counter_suits++;
 			Monitor::taken_suits += received.data;
 			if (received.cc[0] == 0)
-			{
+		 	{
 				pthread_mutex_lock(&Monitor::mutexQueueSuits);
 				reply_wants_s++;
 				if (Monitor::queueForSuits.empty())

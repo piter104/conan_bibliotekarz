@@ -34,12 +34,13 @@ void Conan::loop(int size, int rank)
                                         pthread_mutex_unlock(&Monitor::lamportMutex);
                                         Monitor::sendMessage(pkt, Monitor::queueTasks[i].cc[j], REQ_PZ);
                                         Conan::state = ConanState::WAIT_Z;
-                                      // debug("Conan: Wysłałem REQ_PZ o zlecenie o numerze: %d do Conana: %d", pkt->data, Monitor::queueTasks[i].cc[j]);
+                                        // debug("Conan: Wysłałem REQ_PZ o zlecenie o numerze: %d do Conana: %d", pkt->data, Monitor::queueTasks[i].cc[j]);
                                 }
                                 //czeka na odpowiedzi
                                 while (Conan::state == ConanState::WAIT_Z)
                                 {
-                                        Monitor::my_librarian = Monitor::queueTasks[i].src;
+                                        if (Monitor::my_librarian == -1)
+                                                Monitor::my_librarian = Monitor::queueTasks[i].src;
                                 }
                                 if (Conan::state == ConanState::GET_S)
                                         break;
@@ -76,6 +77,9 @@ void Conan::loop(int size, int rank)
                         pkt->data = true;
                         pkt->tag = ACK_WZ;
                         Monitor::sendMessage(pkt, Monitor::my_librarian, ACK_WZ);
+                        Monitor::deleteTaskFromQueue(Monitor::my_task);
+                        Monitor::my_task = -1;
+                        Monitor::my_librarian = -1;
                         Conan::state = ConanState::RETURN_S;
                         debug("Conan: Jestem w pralni której nie zaimplementowaliście!!!");
                         sleep(5);
