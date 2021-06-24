@@ -23,6 +23,9 @@ void Conan::loop(int size, int rank)
                         {
                                 if (Monitor::queueTasks[i].data <= 0)
                                         continue;
+                                pthread_mutex_lock(&Monitor::lamportMutex);
+                                pkt->ts = Monitor::lamport;
+                                pthread_mutex_unlock(&Monitor::lamportMutex);
                                 for (int j = 0; j < Monitor::CONANTASKNUMBER; j++)
                                 {
                                         if (Monitor::queueTasks[i].cc[j] == Monitor::rank)
@@ -31,13 +34,11 @@ void Conan::loop(int size, int rank)
                                         }
                                         pkt->data = Monitor::queueTasks[i].data;
                                         pkt->tag = REQ_PZ;
-                                        pthread_mutex_lock(&Monitor::lamportMutex);
-                                        pkt->ts = Monitor::lamport;
-                                        pthread_mutex_unlock(&Monitor::lamportMutex);
                                         Monitor::sendMessage(pkt, Monitor::queueTasks[i].cc[j], REQ_PZ);
                                         Conan::state = ConanState::WAIT_Z;
                                         debug("Conan: Wysłałem REQ_PZ o zlecenie o numerze: %d do Conana: %d", pkt->data, Monitor::queueTasks[i].cc[j]);
                                 }
+                                Monitor::incrementLamportOnSend();
                                 //czeka na odpowiedzi
                                 while (Conan::state == ConanState::WAIT_Z)
                                 {
@@ -59,6 +60,7 @@ void Conan::loop(int size, int rank)
                                         continue;
                                 Monitor::sendMessage(pkt, i, REQ_S);
                         }
+                        Monitor::incrementLamportOnSend();
                         pthread_mutex_lock(&Monitor::mutexQueueSuits);
                         Monitor::queueForSuits.push_back(*pkt);
                         sort(Monitor::queueForSuits.begin(), Monitor::queueForSuits.end(),
@@ -83,6 +85,7 @@ void Conan::loop(int size, int rank)
                         pkt->data = true;
                         pkt->tag = ACK_WZ;
                         Monitor::sendMessage(pkt, Monitor::my_librarian, ACK_WZ);
+                        Monitor::incrementLamportOnSend();
                         Monitor::my_task = -1;
                         Conan::state = ConanState::RETURN_S;
                         debug("Conan: Jestem w pralni której nie zaimplementowaliście!!!");
@@ -95,12 +98,14 @@ void Conan::loop(int size, int rank)
                         else
                                 Conan::state = ConanState::TAKE_Z;
                         pkt->tag = RELEASE_S;
+                        
                         for (int i = 0; i < size; i++)
                         {
                                 if (i == rank || !(i % 4))
                                         continue;
                                 Monitor::sendMessage(pkt, i, RELEASE_S);
                         }
+                        Monitor::incrementLamportOnSend();
                         Monitor::my_suits_counter--;
                         Monitor::taken_suits--;
                         debug("Conan: Oddałem strój ziomeczki!");

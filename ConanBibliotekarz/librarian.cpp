@@ -50,9 +50,10 @@ void Librarian::loop(int size, int rank)
                 pkt->tag = ACK_DZ;
                 pkt->ts = Monitor::lamport;
                 Monitor::sendMessage(pkt, chosenConans[i], ACK_DZ);
-
+                Monitor::incrementLamportOnSend();
                 debug("Bibliotekarz: Wysłałem zlecenie o numerze: %d do Conana: %d", pkt->data, chosenConans[i]);
             }
+            
             Librarian::state = LibrarianState::WAIT_WZ;
         }
         else

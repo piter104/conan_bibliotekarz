@@ -42,7 +42,7 @@ packet_t Monitor::receiveMessage()
 
 void Monitor::sendMessage(packet_t *packet, int target, int tag)
 {
-	Monitor::incrementLamportOnSend();
+	// Monitor::incrementLamportOnSend();
 	MPI_Send(packet, 1, MPI_PAKIET_T, target, tag, MPI_COMM_WORLD);
 }
 
@@ -134,14 +134,14 @@ void Monitor::listen()
 			{
 				pkt->data = received.data;
 				//debug("Conan: Udzielam zgodę (ACK_PZ) na przyjęcie zlecenia: %d przez Conana: %d", received.data, received.src);
-				Monitor::sendMessage(pkt, received.src, ACK_PZ);
 			}
 			else
 			{
 				pkt->data = false;
 				//debug("Conan: Odmawiam zgody (ACK_PZ) na przyjęcie zlecenia: %d przez Conana: %d", received.data, received.src);
-				Monitor::sendMessage(pkt, received.src, ACK_PZ);
 			}
+			Monitor::sendMessage(pkt, received.src, ACK_PZ);
+			Monitor::incrementLamportOnSend();
 			pthread_mutex_unlock(&Monitor::takeTaskMutex);
 		}
 		else if (received.tag == ACK_PZ)
@@ -185,6 +185,7 @@ void Monitor::listen()
 							Conan::state = ConanState::GET_S;
 							for (int i = 0; i < Monitor::CONANTASKNUMBER - 1; i++)
 								Monitor::sendMessage(pkt, repliers[i], ACK_Z);
+							Monitor::incrementLamportOnSend();
 							reply_counter = 0;
 						}
 					}
@@ -225,6 +226,7 @@ void Monitor::listen()
 				pkt->cc[1] = 1; // o tyle sie ubiegam
 				//debug("Conan: Odmawiam zgody (ACK_S) na przyjęcie stroju przez Conana: %d", received.src);
 				Monitor::sendMessage(pkt, received.src, ACK_S);
+				Monitor::incrementLamportOnSend();
 			}
 			else
 			{
@@ -250,6 +252,7 @@ void Monitor::listen()
 				}
 				//debug("Conan: Udzielam zgodę (ACK_S) na przyjęcie stroju przez Conana: %d", received.src);
 				Monitor::sendMessage(pkt, received.src, ACK_S);
+				Monitor::incrementLamportOnSend();
 			}
 		}
 		else if (received.tag == ACK_S)
@@ -309,6 +312,7 @@ void Monitor::listen()
 								continue;
 							Monitor::sendMessage(pkt, i, ACK_TS);
 						}
+						Monitor::incrementLamportOnSend();
 						Monitor::deleteConanFromQueue(rank);
 						taken_suits++;
 						my_suits_counter++;
@@ -339,6 +343,7 @@ void Monitor::listen()
 						continue;
 					Monitor::sendMessage(pkt, i, ACK_TS);
 				}
+				Monitor::incrementLamportOnSend();
 				Monitor::deleteConanFromQueue(rank);
 				debug("Conan: Biorę strój");
 				my_suits_counter++;
