@@ -24,7 +24,7 @@ public:
 
 	static int occupied_laundry;
 	static int reply_counter_laundry;
-	static int my_laundry_counter; 
+	static int my_laundry_counter;
 
 	static int my_task;
 	static int my_librarian;
@@ -37,6 +37,7 @@ public:
 	static pthread_mutex_t mutexQueueLaundry;
 
 	static pthread_mutex_t mutexTakenSuits;
+	static pthread_mutex_t mutexOccupiedLaundry;
 
 	static packet_t receiveMessage();
 	static void sendMessage(packet_t *packet, int target, int tag);

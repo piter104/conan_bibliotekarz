@@ -8,6 +8,7 @@ unsigned int Monitor::lamport = 0;
 pthread_mutex_t Monitor::lamportMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t Monitor::takeTaskMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t Monitor::mutexTakenSuits = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t Monitor::mutexOccupiedLaundry = PTHREAD_MUTEX_INITIALIZER;
 
 int Monitor::rank;
 int Monitor::size;
@@ -20,10 +21,9 @@ int Monitor::taken_suits = 0;
 int Monitor::my_task = -1;
 int Monitor::my_librarian = -1;
 
-
 int Monitor::occupied_laundry;
 int Monitor::reply_counter_laundry;
-int Monitor::my_laundry_counter; 
+int Monitor::my_laundry_counter;
 
 bool Monitor::listening = false;
 
@@ -51,7 +51,6 @@ packet_t Monitor::receiveMessage()
 
 void Monitor::sendMessage(packet_t *packet, int target, int tag)
 {
-	// Monitor::incrementLamportOnSend();
 	MPI_Send(packet, 1, MPI_PAKIET_T, target, tag, MPI_COMM_WORLD);
 }
 
@@ -144,13 +143,10 @@ void Monitor::listen()
 				Conan::state = ConanState::TAKE_Z;
 				debug("Conan: Jestem w stanie: TAKE_Z, LAMPORT: %d", received.ts);
 			}
-			// debug("troche strach tu wejsc");
 			pthread_mutex_lock(&Monitor::mutexQueueTasks);
-			// debug("czyzbym sie zatrzasnal?");
 			queueTasks.push_back(received);
-			// debug("wolny!")
 			pthread_mutex_unlock(&Monitor::mutexQueueTasks);
-			debug("Conan: Otrzymałem zlecenie o numerze: %d od Bibliotekarza: %d", received.data, received.src);
+			//debug("Conan: Otrzymałem zlecenie o numerze: %d od Bibliotekarza: %d", received.data, received.src);
 		}
 		else if (received.tag == REQ_PZ)
 		{
@@ -161,15 +157,16 @@ void Monitor::listen()
 				Monitor::my_task != received.data &&
 				(Monitor::lamport > received.ts ||
 				 (Monitor::lamport == received.ts && Monitor::rank > received.src) ||
-				 (Conan::state != ConanState::TAKE_Z && Conan::state != ConanState::WAIT_R && Conan::state != ConanState::WAIT_Z)))
+				 (Conan::state != ConanState::TAKE_Z && Conan::state != ConanState::WAIT_R && Conan::state != ConanState::WAIT_Z)
+				 ))
 			{
 				pkt->data = received.data;
-				debug("Conan: Udzielam zgodę (ACK_PZ) na przyjęcie zlecenia: %d przez Conana: %d", received.data, received.src);
+				//debug("Conan: Udzielam zgodę (ACK_PZ) na przyjęcie zlecenia: %d przez Conana: %d", received.data, received.src);
 			}
 			else
 			{
 				pkt->data = false;
-				debug("Conan: Odmawiam zgody (ACK_PZ) na przyjęcie zlecenia: %d przez Conana: %d", received.data, received.src);
+				//debug("Conan: Odmawiam zgody (ACK_PZ) na przyjęcie zlecenia: %d przez Conana: %d", received.data, received.src);
 			}
 			pkt->ts = Monitor::incrementLamportOnSend();
 			Monitor::sendMessage(pkt, received.src, ACK_PZ);
@@ -242,7 +239,7 @@ void Monitor::listen()
 			{
 				Monitor::deleteTaskFromQueue(received.data);
 				reply_counter = 0;
-				if (Conan::state == ConanState::WAIT_Z)
+				if (Conan::state == ConanState::WAIT_R)
 					Conan::state = ConanState::TAKE_Z;
 			}
 		}
@@ -281,10 +278,9 @@ void Monitor::listen()
 					sort(Monitor::queueForSuits.begin(), Monitor::queueForSuits.end(),
 						 prioritySortCriterion);
 				}
-				debug("Conan: Udzielam zgodę (ACK_S) na przyjęcie stroju przez Conana: %d", received.src);
-				pkt-> ts = Monitor::incrementLamportOnSend();
+				//debug("Conan: Udzielam zgodę (ACK_S) na przyjęcie stroju przez Conana: %d", received.src);
+				pkt->ts = Monitor::incrementLamportOnSend();
 				Monitor::sendMessage(pkt, received.src, ACK_S);
-				
 			}
 		}
 		else if (received.tag == ACK_S)
@@ -387,11 +383,12 @@ void Monitor::listen()
 				my_suits_counter++;
 				taken_suits++;
 				pthread_mutex_unlock(&Monitor::mutexTakenSuits);
-				debug("Conan: RELEASE Liczba stroji: %d", taken_suits);
+				debug("Conan: RELEASE Liczba strojów: %d", taken_suits);
 				Conan::state = ConanState::COMPLETE_Z;
 			}
 		}
-		else if (received.tag == REQ_P){
+		else if (received.tag == REQ_P)
+		{
 			pkt->tag = ACK_P;
 			pkt->src = Monitor::rank;
 			pkt->data = Monitor::my_laundry_counter;
@@ -399,7 +396,7 @@ void Monitor::listen()
 			{
 				pkt->cc[0] = false;
 				pkt->cc[1] = 1; // o tyle sie ubiegam
-				debug("Conan: Odmawiam zgody (ACK_P) na wejście do pralni Conana: %d", received.src);
+				//debug("Conan: Odmawiam zgody (ACK_P) na wejście do pralni Conana: %d", received.src);
 				pkt->ts = Monitor::incrementLamportOnSend();
 				Monitor::sendMessage(pkt, received.src, ACK_P);
 			}
@@ -425,16 +422,16 @@ void Monitor::listen()
 					sort(Monitor::queueForLaundry.begin(), Monitor::queueForLaundry.end(),
 						 prioritySortCriterion);
 				}
-				debug("Conan: Udzielam zgodę (ACK_P) na wejście do pralni Conana: %d", received.src);
-				pkt-> ts = Monitor::incrementLamportOnSend();
+				//debug("Conan: Udzielam zgodę (ACK_P) na wejście do pralni Conana: %d", received.src);
+				pkt->ts = Monitor::incrementLamportOnSend();
 				Monitor::sendMessage(pkt, received.src, ACK_P);
-				
 			}
 		}
 		else if (received.tag == ACK_P)
 		{
+			pthread_mutex_lock(&Monitor::mutexOccupiedLaundry);
 			reply_counter_laundry++;
-			//Monitor::taken_suits += received.data;
+			pthread_mutex_unlock(&Monitor::mutexOccupiedLaundry);
 			if (received.cc[0] == 0)
 			{
 				if (Monitor::queueForLaundry.empty())
@@ -489,7 +486,9 @@ void Monitor::listen()
 							Monitor::sendMessage(pkt, i, ACK_TP);
 						}
 						Monitor::deleteConanFromLaundryQueue(rank);
+						pthread_mutex_lock(&Monitor::mutexOccupiedLaundry);
 						occupied_laundry++;
+						pthread_mutex_unlock(&Monitor::mutexOccupiedLaundry);
 						my_laundry_counter++;
 						debug("Conan: Zajmuję miejsce w pralni LAMPORT: %d, zajęte miejsca w pralni: %d, moje prania: %d", received.ts, occupied_laundry, my_laundry_counter);
 						Conan::state = ConanState::WASH_P;
@@ -499,10 +498,38 @@ void Monitor::listen()
 		}
 		else if (received.tag == ACK_TP)
 		{
+			pthread_mutex_lock(&Monitor::mutexOccupiedLaundry);
 			occupied_laundry++;
+			pthread_mutex_unlock(&Monitor::mutexOccupiedLaundry);
 			Monitor::deleteConanFromLaundryQueue(received.src);
 			sort(Monitor::queueForLaundry.begin(), Monitor::queueForLaundry.end(),
 				 prioritySortCriterion);
+		}
+		else if (received.tag == RELEASE_P)
+		{
+			pthread_mutex_lock(&Monitor::mutexOccupiedLaundry);
+			occupied_laundry--;
+			pthread_mutex_unlock(&Monitor::mutexOccupiedLaundry);
+			if (Monitor::queueForSuits.front().src == rank && Conan::state == ConanState::WAIT_P && occupied_laundry < Monitor::LAUNDRY)
+			{
+				pkt->tag = ACK_TP;
+				pkt->src = Monitor::rank;
+				pkt->ts = Monitor::incrementLamportOnSend();
+				pthread_mutex_lock(&Monitor::mutexOccupiedLaundry);
+				for (int i = 0; i < size; i++)
+				{
+					if (i == rank || !(i % 4))
+						continue;
+					Monitor::sendMessage(pkt, i, ACK_TP);
+				}
+				Monitor::deleteConanFromLaundryQueue(rank);
+				debug("Conan: RELEASE Biorę miejsce w pralni, LAMPORT: %d", received.ts);
+				my_laundry_counter++;
+				occupied_laundry++;
+				pthread_mutex_unlock(&Monitor::mutexOccupiedLaundry);
+				debug("Conan: RELEASE Liczba zajętych miejsc w pralni: %d", occupied_laundry);
+				Conan::state = ConanState::WASH_P;
+			}
 		}
 	}
 }
