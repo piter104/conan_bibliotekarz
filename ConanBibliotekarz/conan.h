@@ -4,12 +4,14 @@
 
 enum class ConanState{
 WAIT_Z, //oczekiwanie na zlecenie
-TAKE_Z, // przyjmowanie zlecenia
+TAKE_Z, // przyjmowanie zlecenia,
+WAIT_R, // oczekiwanie na odpowiedzi Conanow
 WAIT_S, //oczekiwanie na wolny strój
 GET_S, //wypożyczenie stroju
 COMPLETE_Z, //wykonanie zlecenia
 REPORT_Z, //oddanie zlecenia
 WAIT_P, //oczekiwanie na wejście do pralni
+WASH_P, //korzystam z pralni
 RETURN_S //zwrot stroju do magazynu
 };
 

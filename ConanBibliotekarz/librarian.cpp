@@ -44,15 +44,14 @@ void Librarian::loop(int size, int rank)
                     }
                 }
             }
+            pkt->ts = Monitor::incrementLamportOnSend();
             for (int i = 0; i < conans; i++)
             {
                 pkt->data = taskNumber;
                 pkt->tag = ACK_DZ;
-                pkt->ts = Monitor::lamport;
                 Monitor::sendMessage(pkt, chosenConans[i], ACK_DZ);
-                Monitor::incrementLamportOnSend();
-                debug("Bibliotekarz: Wysłałem zlecenie o numerze: %d do Conana: %d", pkt->data, chosenConans[i]);
-            }
+                debug("Bibliotekarz: Wysłałem zlecenie o numerze: %d do Conana: %d, lamport: %d", pkt->data, chosenConans[i], pkt->ts);
+            }  
             
             Librarian::state = LibrarianState::WAIT_WZ;
         }
@@ -64,7 +63,7 @@ void Librarian::loop(int size, int rank)
                 received = Monitor::receiveMessage();
                 if (received.tag == ACK_WZ)
                 {
-                    debug("Bibliotekarz: Dzięki Conanie! Dobrze się spisałeś. Lecę ogarniać kolejnych niesfornych czytelników.");
+                    debug("Bibliotekarz: Dzięki Conanie! Dobrze się spisałeś. Lecę ogarniać kolejnych niesfornych czytelników. LAMPORT: %d", received.ts);
                     Librarian::state = LibrarianState::WAIT_NC;
                     break;
                 }
