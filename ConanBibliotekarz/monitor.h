@@ -8,7 +8,7 @@ private:
 
 public:
 	const static int CONANTASKNUMBER = 3;
-	const static int SUITS = 3;
+	const static int SUITS = 2;
 	const static int NUMBER_OF_CONANS = 6;
 	const static int LAUNDRY = 2;
 	static unsigned int lamport;
