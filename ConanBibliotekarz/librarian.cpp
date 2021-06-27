@@ -21,7 +21,7 @@ void Librarian::loop(int size, int rank)
             int conans = 0;
             int chosenConans[Monitor::CONANTASKNUMBER];
             int target;
-            int taskNumber = rand() % 100 + rank;
+            int taskNumber = 100 + rank;
             while (conans < Monitor::CONANTASKNUMBER)
             {
                 target = rand() % size;

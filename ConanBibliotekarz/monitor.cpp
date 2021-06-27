@@ -13,6 +13,7 @@ pthread_mutex_t Monitor::mutexOccupiedLaundry = PTHREAD_MUTEX_INITIALIZER;
 int Monitor::rank;
 int Monitor::size;
 int Monitor::reply_counter = 0;
+int Monitor::NUMBER_OF_CONANS = 0;
 
 int Monitor::reply_counter_suits = 0;
 int Monitor::my_suits_counter = 0;
@@ -75,6 +76,15 @@ void Monitor::initMonitor()
 {
 	MPI_Comm_rank(MPI_COMM_WORLD, &Monitor::rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &Monitor::size);
+	int counter = 0;
+	for (int i = 0; i < Monitor::size; i++)
+	{
+		if (i % 4 != 0)
+		{
+			counter++;
+		}
+	}
+	Monitor::NUMBER_OF_CONANS = counter;
 }
 
 void Monitor::deleteTaskFromQueue(int data)
@@ -165,7 +175,7 @@ void Monitor::listen()
 			else
 			{
 				pkt->data = false;
-				//debug("Conan: Odmawiam zgody (ACK_PZ) na przyjęcie zlecenia: %d przez Conana: %d", received.data, received.src);
+				debug("Conan: Odmawiam zgody (ACK_PZ) na przyjęcie zlecenia: %d przez Conana: %d", received.data, received.src);
 			}
 			pkt->ts = Monitor::incrementLamportOnSend();
 			Monitor::sendMessage(pkt, received.src, ACK_PZ);
@@ -247,7 +257,7 @@ void Monitor::listen()
 			pkt->tag = ACK_S;
 			pkt->src = Monitor::rank;
 			pkt->data = Monitor::my_suits_counter;
-			if (Conan::state == ConanState::GET_S && (Monitor::lamport < received.ts || (Monitor::lamport == received.ts && Monitor::rank < received.src)))
+			if ((Conan::state == ConanState::GET_S || Conan::state == ConanState::WAIT_S) && (Monitor::lamport < received.ts || (Monitor::lamport == received.ts && Monitor::rank < received.src)))
 			{
 				pkt->cc[0] = false;
 				pkt->cc[1] = 1; // o tyle sie ubiegam
@@ -397,7 +407,7 @@ void Monitor::listen()
 			{
 				pkt->cc[0] = false;
 				pkt->cc[1] = 1; // o tyle sie ubiegam
-				//debug("Conan: Odmawiam zgody (ACK_P) na wejście do pralni Conana: %d", received.src);
+				debug("Conan: Odmawiam zgody (ACK_P) na wejście do pralni Conana: %d", received.src);
 				pkt->ts = Monitor::incrementLamportOnSend();
 				Monitor::sendMessage(pkt, received.src, ACK_P);
 			}
