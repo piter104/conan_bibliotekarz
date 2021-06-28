@@ -3,15 +3,13 @@
 
 class Monitor
 {
-private:
-	static bool listening;
-
 public:
 	const static int CONANTASKNUMBER = 3;
 	const static int SUITS = 3;
 	const static int LAUNDRY = 1;
+
 	static unsigned int lamport;
-	static int NUMBER_OF_CONANS;
+	static int NUMBER_OF_CONANS; 
 	static pthread_mutex_t takeTaskMutex;
 	static pthread_mutex_t lamportMutex;
 	static int rank;

@@ -25,7 +25,6 @@ void Conan::loop(int size, int rank)
                                         continue;
                                 pkt->ts = Monitor::incrementLamportOnSend();
                                 Conan::state = ConanState::WAIT_R;
-                                // debug("Conan: Jestem w stanie WAIT_R");
                                 for (int j = 0; j < Monitor::CONANTASKNUMBER; j++)
                                 {
                                         if (Monitor::queueTasks[i].cc[j] == Monitor::rank)
@@ -35,10 +34,7 @@ void Conan::loop(int size, int rank)
                                         pkt->data = Monitor::queueTasks[i].data;
                                         pkt->tag = REQ_PZ;
                                         Monitor::sendMessage(pkt, Monitor::queueTasks[i].cc[j], REQ_PZ);
-                                        
-                                        // debug("Conan: Wysłałem REQ_PZ o zlecenie o numerze: %d do Conana: %d, LAMPORT: %d", pkt->data, Monitor::queueTasks[i].cc[j], pkt->ts);
                                 }
-                                // debug("Conan: Ubiegam się o zlecenie nr: %d", pkt->data);
                                 Monitor::my_librarian = Monitor::queueTasks[i].src;
                                 //czeka na odpowiedzi
                                 while (Conan::state == ConanState::WAIT_R)
@@ -65,7 +61,6 @@ void Conan::loop(int size, int rank)
                              Monitor::prioritySortCriterion);
                         pthread_mutex_unlock(&Monitor::mutexQueueSuits);
                         Conan::state = ConanState::WAIT_S;
-                        // debug("Conan: Wysłałem REQ_S do wszystkich Conanów, LAMPORT: %d", pkt->ts);
                         while (Conan::state == ConanState::WAIT_S)
                         {
                         }
@@ -100,7 +95,6 @@ void Conan::loop(int size, int rank)
                         pthread_mutex_unlock(&Monitor::mutexQueueLaundry);
                         Conan::state = ConanState::WAIT_P;
                         debug("Chciałbym wyprać strój! Ciekawe, czy jest miejsce w pralni?")
-                        // debug("Conan: Wysłałem REQ_P do wszystkich Conanów, LAMPORT: %d", pkt->ts);
                         while (Conan::state == ConanState::WAIT_P)
                         {
                         }
@@ -139,7 +133,6 @@ void Conan::loop(int size, int rank)
                         Monitor::my_suits_counter--;
                         Monitor::taken_suits--;
                         pthread_mutex_unlock(&Monitor::mutexTakenSuits);
-                        // debug("Conan: Oddałem strój ziomeczki! LAMPORT: %d, zajęte stroje: %d, zajęte miejsca w pralni: %d", pkt->ts, Monitor::taken_suits, Monitor::occupied_laundry);
                         debug("Zwracam strój do magazynu!")
                         if (Monitor::queueTasks.size() == 0)
                                 Conan::state = ConanState::WAIT_Z;

@@ -16,8 +16,6 @@ void Librarian::loop(int size, int rank)
             sleep(rand() % 10); //bibliotekarz czeka losową ilość czasu na nowe zlecenie
             debug("Bibliotekarz: Pojawiło się nowe zlecenie!");
             Librarian::state = LibrarianState::WAIT_PZ;
-            // debug("Bibliotekarz: Proszę się dogadać kto wykona zlecenie. Jestem w stanie WAIT_PZ");
-
             int conans = 0;
             int chosenConans[Monitor::CONANTASKNUMBER];
             int target;
@@ -57,13 +55,11 @@ void Librarian::loop(int size, int rank)
         }
         else
         {
-            // debug("Bibliotekarz: Dalej Conanie! Czekam az skończysz misje. Jestem w stanie WAIT_WZ");
             while (1)
             {
                 received = Monitor::receiveMessage();
                 if (received.tag == ACK_WZ)
                 {
-                    // debug("Bibliotekarz: Dzięki Conanie! Dobrze się spisałeś. Lecę ogarniać kolejnych niesfornych czytelników. LAMPORT: %d", received.ts);
                     debug("Bibliotekarz: Dzięki Conanie, dobra robota! Lecę ogarniać kolejnych nisfornych czytelników.")
                     Librarian::state = LibrarianState::WAIT_NC;
                     break;
